@@ -43,3 +43,17 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.javadoc {
+    destinationDir = file("$buildDir/docs/javadoc")
+
+    include "ru/mishelby/walletapi/**"
+
+    // Кодировка
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.author = true
+    options.version = true
+
+    classpath = sourceSets.main.compileClasspath
+}

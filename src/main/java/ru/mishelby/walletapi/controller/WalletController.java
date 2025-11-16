@@ -17,14 +17,34 @@ import ru.mishelby.walletapi.service.WalletService;
 
 import java.util.UUID;
 
+/**
+ * REST-контроллер для управления операциями над кошельками.
+ * <p>
+ * Поддерживает следующие операции:
+ * <ul>
+ *     <li>Получение текущего баланса кошелька</li>
+ *     <li>Пополнение кошелька (deposit)</li>
+ *     <li>Перевод средств на другой кошелёк (withdraw)</li>
+ * </ul>
+ * <p>
+ * Все операции логируются через {@link org.slf4j.Logger}.
+ * Использует {@link WalletService} для выполнения бизнес-логики.
+ */
 @Tag(name = "Wallet Controller", description = "Управление операциями над кошельками")
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/wallets")
 @RequiredArgsConstructor
 public class WalletController {
+
     private final WalletService walletService;
 
+    /**
+     * Получает текущий баланс кошелька по его UUID.
+     *
+     * @param uuid UUID кошелька
+     * @return {@link ResponseEntity} с объектом {@link WalletDto}, содержащим баланс и дату запроса
+     */
     @Operation(summary = "Получить текущий баланс кошелька")
     @GetMapping(path = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
@@ -37,6 +57,13 @@ public class WalletController {
         return ResponseEntity.ok(walletService.getBalance(uuid));
     }
 
+    /**
+     * Пополняет баланс кошелька по его UUID.
+     *
+     * @param uuid UUID кошелька
+     * @param request объект {@link DepositOperationRequest} с суммой пополнения
+     * @return {@link ResponseEntity} с объектом {@link WalletOperationResponse}, содержащим старый и новый баланс
+     */
     @Operation(summary = "Внести деньги на кошелёк по его ID")
     @PostMapping(path = "/{uuid}/deposit", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
@@ -50,6 +77,13 @@ public class WalletController {
         return ResponseEntity.ok(walletService.deposit(uuid, request));
     }
 
+    /**
+     * Переводит средства с одного кошелька на другой по их UUID.
+     *
+     * @param uuid UUID кошелька-отправителя
+     * @param request объект {@link TransferOperationRequest} с суммой перевода и UUID получателя
+     * @return {@link ResponseEntity} с объектом {@link WalletOperationResponse}, содержащим старый и новый баланс отправителя
+     */
     @Operation(summary = "Перевести деньги на другой кошелёк по его ID")
     @PostMapping(path = "/{uuid}/withdraw", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {

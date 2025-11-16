@@ -15,6 +15,20 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Сервис для генерации тестовых данных в базе данных.
+ * <p>
+ * Создаёт тестовые кошельки со случайным балансом и датами, если таблица кошельков пуста.
+ * <p>
+ * Генерация выполняется автоматически при старте приложения, если включена соответствующая
+ * настройка в {@code application.properties}:
+ * <pre>
+ * preload.test-data=true
+ * </pre>
+ * <p>
+ * Реализует {@link org.springframework.boot.CommandLineRunner}, поэтому метод {@link #run(String...)}
+ * вызывается после запуска Spring контекста.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,12 +37,28 @@ public class GenerateTestDataService implements CommandLineRunner {
     private final WalletRepository walletRepository;
     private static final Random RANDOM = new  Random();
 
+    /**
+     * Метод запускается после старта приложения и вызывает генерацию тестовых кошельков.
+     *
+     * @param args аргументы командной строки (не используются)
+     * @throws Exception если при генерации данных произошла ошибка
+     */
     @Override
     @Transactional
     public void run(String... args) throws Exception {
         generateWallets();
     }
 
+    /**
+     * Генерирует 50 тестовых кошельков со случайными параметрами:
+     * <ul>
+     *     <li>Баланс: случайное значение от 100 до 5000</li>
+     *     <li>Дата создания: текущий момент</li>
+     *     <li>Срок действия: текущий месяц + случайное количество месяцев до 24</li>
+     * </ul>
+     * <p>
+     * Генерация выполняется только если таблица кошельков пуста.
+     */
     public void generateWallets() {
         List<WalletEntity> allWallets = walletRepository.findAll();
         if (allWallets.isEmpty()) {
