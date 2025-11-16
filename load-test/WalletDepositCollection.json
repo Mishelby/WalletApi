@@ -1,0 +1,77 @@
+{
+  "info": {
+    "name": "Wallet Deposit Load Test with Random Amount",
+    "_postman_id": "abcdef12-3456-7890-abcd-1234567890ab",
+    "description": "Коллекция для 1000 повторных вызовов depositOperation с случайной суммой",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Deposit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 100\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/v1/wallets/{{walletUuid}}/deposit",
+          "host": [
+            "http://localhost:8080"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "wallets",
+            "{{walletUuid}}",
+            "deposit"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Инициализация счётчика",
+              "if (!pm.environment.get(\"depositCounter\")) {",
+              "    pm.environment.set(\"depositCounter\", 1);",
+              "} else {",
+              "    let count = parseInt(pm.environment.get(\"depositCounter\"));",
+              "    pm.environment.set(\"depositCounter\", count + 1);",
+              "}",
+              "",
+              "// Ограничение на 1000 запросов",
+              "let counter = parseInt(pm.environment.get(\"depositCounter\"));",
+              "if (counter > 1000) {",
+              "    postman.setNextRequest(null); // Остановить выполнение",
+              "} else {",
+              "    postman.setNextRequest(pm.info.requestName); // Запустить текущий запрос снова",
+              "}",
+              "",
+              "// Генерация случайной суммы от 50 до 500",
+              "let randomAmount = Math.floor(Math.random() * (500 - 50 + 1)) + 50;",
+              "pm.request.body.raw = JSON.stringify({ amount: randomAmount });",
+              "",
+              "console.log(`Deposit request #${counter}, amount: ${randomAmount}`);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "walletUuid",
+      "value": "PUT_YOUR_WALLET_UUID_HERE"
+    }
+  ]
+}
