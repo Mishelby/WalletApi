@@ -53,26 +53,29 @@ public class WalletService {
         return supply(WITHDRAW, transferAmount, () -> {
             var walletEntityFrom = repositoryHelper.findWalletForUpdateByID(walletID);
 
-            if (walletEntityFrom.getBalance().compareTo(transferAmount) < 0) {
-                log.error("[ERROR] Not enough balance!");
-                throw new WalletOperationException("Not enough balance! Wallet ID %s"
-                        .formatted(walletID)
-                );
-            }
+            checkWalletFromBalance(walletID, walletEntityFrom, transferAmount);
 
             var walletEntityTo = repositoryHelper.findWalletForUpdateByID(
-                    transferOperationRequest.walletIDTo()
-            );
+                    transferOperationRequest.walletIDTo());
 
             BigDecimal oldBalance = walletEntityFrom.getBalance();
 
-            walletEntityFrom.setBalance(
-                    walletEntityFrom.getBalance().subtract(transferAmount)
-            );
+            walletEntityFrom.setBalance(walletEntityFrom.getBalance().subtract(transferAmount));
             walletEntityTo.setBalance(walletEntityTo.getBalance().add(transferAmount));
 
             return getWalletOperationResponse(oldBalance, walletEntityFrom.getBalance(), WITHDRAW);
         });
+    }
+
+    private static void checkWalletFromBalance(UUID walletID,
+                                               WalletEntity walletEntityFrom,
+                                               BigDecimal transferAmount) {
+        if (walletEntityFrom.getBalance().compareTo(transferAmount) < 0) {
+            log.error("[ERROR] Not enough balance!");
+            throw new WalletOperationException("Not enough balance! Wallet ID %s"
+                    .formatted(walletID)
+            );
+        }
     }
 
     private static WalletOperationResponse supply(OperationType operation,
