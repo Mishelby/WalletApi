@@ -4,11 +4,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
@@ -17,11 +20,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
-        ErrorResponse errorResponse = getErrorResponse(
+        var errorResponse = getErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -29,39 +33,69 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleException(EntityNotFoundException ex, HttpServletRequest request) {
-        ErrorResponse errorResponse = getErrorResponse(
+        var errorResponse = getErrorResponse(
                 HttpStatus.NOT_FOUND,
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
-                request.getRequestURI()
+                request.getRequestURI(),
+                null
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+
+        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fe -> new ErrorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
+                .toList();
+
+        String details = fieldErrors.stream()
+                .map(ErrorResponse.FieldError::getMessage)
+                .collect(Collectors.joining("; "));
+
+        var validationException = getErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation exeption",
+                details,
+                request.getRequestURI(),
+                fieldErrors
+        );
+
+        return new ResponseEntity<>(validationException, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {
+            MethodArgumentTypeMismatchException.class,
+            WalletOperationException.class,
+    })
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
                                                             HttpServletRequest request) {
 
         if (nonNull(ex.getRequiredType()) && ex.getRequiredType().equals(java.util.UUID.class)) {
-            ErrorResponse error = ErrorResponse.builder()
-                    .status(HttpStatus.BAD_REQUEST.value())
-                    .title("Invalid UUID")
-                    .details("The provided UUID is invalid: " + ex.getValue())
-                    .instance(request.getRequestURI())
-                    .localDateTime(LocalDateTime.now())
-                    .build();
+            var error = getErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid UUID",
+                    "The provided UUID is invalid: " + ex.getValue(),
+                    request.getRequestURI(),
+                    null
+            );
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
 
-        ErrorResponse error = ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .title("Type Mismatch")
-                .details(ex.getMessage())
-                .instance(request.getRequestURI())
-                .localDateTime(LocalDateTime.now())
-                .build();
+        var error = getErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Type Mismatch",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -70,13 +104,15 @@ public class GlobalExceptionHandler {
             HttpStatus status,
             String title,
             String detail,
-            String instance
+            String instance,
+            List<ErrorResponse.FieldError> fieldErrors
     ) {
         return ErrorResponse.builder()
                 .status(status.value())
                 .title(title)
                 .instance(instance)
                 .details(detail)
+                .fieldError(fieldErrors)
                 .localDateTime(LocalDateTime.now())
                 .build();
     }

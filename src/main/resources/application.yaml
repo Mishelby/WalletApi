@@ -32,5 +32,8 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+swagger:
+  enabled: true
+
 preload:
   test-data: true

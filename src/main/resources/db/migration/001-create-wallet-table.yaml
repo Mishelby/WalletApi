@@ -2,6 +2,14 @@ databaseChangeLog:
   - changeSet:
       id: 001-create-wallet
       author: Misha
+
+      preconditions:
+        onFail: MARK_RAN
+        onError: HALT
+        not:
+          tableExists:
+            tableName: wallet
+
       changes:
         - createTable:
             tableName: wallet
@@ -12,17 +20,20 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
                     nullable: false
+
               - column:
                   name: balance
                   type: numeric(19,2)
                   defaultValueNumeric: 0
                   constraints:
                     nullable: false
+
               - column:
                   name: created_at
                   type: timestamp
                   constraints:
                     nullable: false
+
               - column:
                   name: expiration_date
                   type: varchar(7)

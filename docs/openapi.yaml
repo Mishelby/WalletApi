@@ -1,0 +1,210 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+tags:
+  - name: Wallet Controller
+    description: Управление операциями над кошельком
+paths:
+  /api/v1/wallets/{uuid}/withdraw:
+    post:
+      tags:
+        - Wallet Controller
+      summary: Перевести деньги на другой кошелёк по его ID
+      operationId: withdrawOperation
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferOperationRequest'
+        required: true
+      responses:
+        '200':
+          description: Перевод выполнен успешно!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletOperationResponse'
+        '400':
+          description: Некорректный запрос!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Неизвестная ошибка!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletOperationResponse'
+  /api/v1/wallets/{uuid}/deposit:
+    post:
+      tags:
+        - Wallet Controller
+      summary: Внести деньги на кошелёк по его ID
+      operationId: depositOperation
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositOperationRequest'
+        required: true
+      responses:
+        '200':
+          description: Пополнение прошло успешно!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletOperationResponse'
+        '400':
+          description: Некорректный запрос!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Неизвестная ошибка!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletOperationResponse'
+  /api/v1/wallets/{uuid}:
+    get:
+      tags:
+        - Wallet Controller
+      summary: Получить текущий баланс кошелька
+      operationId: getWalletBalance
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Баланс получен успешно!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDto'
+        '400':
+          description: Некорректный запрос!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Неизвестная ошибка!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDto'
+components:
+  schemas:
+    TransferOperationRequest:
+      required:
+        - amount
+        - walletIDTo
+      type: object
+      properties:
+        walletIDTo:
+          type: string
+          format: uuid
+        amount:
+          type: number
+    WalletOperationResponse:
+      type: object
+      properties:
+        OperationType:
+          type: string
+          description: Тип операции (Пополнение/Перевод)
+          enum:
+            - DEPOSIT
+            - WITHDRAW
+        OldBalance:
+          type: number
+          description: Баланс до перевода
+        NewBalance:
+          type: number
+          description: Баланс после перевода
+        OperationTime:
+          type: string
+          description: Время выполнения операции
+          format: date-time
+      description: Получение информации кошелька после операции
+    ErrorResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Краткое название ошибки
+          example: Invalid UUID
+        status:
+          type: integer
+          description: HTTP статус
+          format: int32
+          example: 400
+        details:
+          type: string
+          description: Подробности ошибки
+          example: 'The provided UUID is invalid: 123'
+        instance:
+          type: string
+          description: URI запроса
+          example: /api/v1/wallets/123
+        localDateTime:
+          type: string
+          description: Время ошибки
+          format: date-time
+        fieldError:
+          type: array
+          description: Поля валидации
+          example: '{field : amount, message : must be greater than zero}'
+          items:
+            $ref: '#/components/schemas/FieldError'
+      description: Стандартная структура ошибки
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      description: Ошибка конкретного поля
+      example: '{field : amount, message : must be greater than zero}'
+    DepositOperationRequest:
+      required:
+        - amount
+      type: object
+      properties:
+        amount:
+          type: number
+    WalletDto:
+      type: object
+      properties:
+        Balance:
+          type: number
+          description: Новый баланс
+        RequestedAt:
+          type: string
+          description: Дата запроса
+          format: date-time
+      description: Стандартное отображение информации кошелька

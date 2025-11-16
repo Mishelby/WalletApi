@@ -34,8 +34,10 @@ import java.util.Random;
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "preload", name = "test-data", havingValue = "true")
 public class GenerateTestDataService implements CommandLineRunner {
-    private final WalletRepository walletRepository;
+
     private static final Random RANDOM = new  Random();
+
+    private final WalletRepository walletRepository;
 
     /**
      * Метод запускается после старта приложения и вызывает генерацию тестовых кошельков.
