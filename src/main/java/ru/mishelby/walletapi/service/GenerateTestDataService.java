@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import static ru.mishelby.walletapi.utils.TestDataConstantValue.*;
+
 /**
  * Сервис для генерации тестовых данных в базе данных.
  * <p>
@@ -70,11 +72,11 @@ public class GenerateTestDataService implements CommandLineRunner, PreInsertEven
     public void generateWallets() {
         List<WalletEntity> allWallets = walletRepository.findAll();
         if (allWallets.isEmpty()) {
-            for (int i = 0; i < 50; i++) {
+            for (var i = 0; i < COUNT_OF_ITERATION; i++) {
                 var walletEntity = new WalletEntity();
-                walletEntity.setBalance(BigDecimal.valueOf(RANDOM.nextInt(100, 5000)));
+                walletEntity.setBalance(BigDecimal.valueOf(RANDOM.nextInt(ORIGIN, BOUND)));
                 walletEntity.setCreatedAt(LocalDateTime.now());
-                walletEntity.setExpirationDate(YearMonth.now().plusMonths(RANDOM.nextInt(24)));
+                walletEntity.setExpirationDate(YearMonth.now().plusMonths(RANDOM.nextInt(BOUND_NEXT_INT)));
                 walletRepository.save(walletEntity);
             }
         }
