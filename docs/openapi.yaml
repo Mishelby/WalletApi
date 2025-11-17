@@ -33,20 +33,44 @@ paths:
           description: Перевод выполнен успешно!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletOperationResponse'
+              examples:
+                200 OK:
+                  description: 200 OK
+                  value:
+                    operationType: DEPOSIT
+                    oldBalanceFrom: 1000
+                    newBalanceFrom: 1500
+                    operationTime: '2025-11-17T10:25:00'
         '400':
           description: Некорректный запрос!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400 Bad Request:
+                  description: 400 Bad Request
+                  value:
+                    title: Validation Error
+                    status: 400
+                    details: Request validation failed
+                    instance: >-
+                      /api/v1/wallets/123e4567-e89b-12d3-a456-426614174000/deposit
+                    localDateTime: '2025-11-17T10:30:00'
+                    fieldError:
+                      - field: amount
+                        message: Amount must be greater than zero
         '500':
           description: Неизвестная ошибка!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletOperationResponse'
+              examples:
+                500 Internal Server Error:
+                  description: 500 Internal Server Error
+                  value:
+                    title: Internal Server Error
+                    status: 500
+                    details: Unexpected error occurred
+                    instance: /api/v1/wallets/123/deposit
+                    localDateTime: '2025-11-16T21:10:00'
   /api/v1/wallets/{uuid}/deposit:
     post:
       tags:
@@ -71,20 +95,83 @@ paths:
           description: Пополнение прошло успешно!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletOperationResponse'
+              examples:
+                200 OK:
+                  description: 200 OK
+                  value:
+                    operationType: DEPOSIT
+                    oldBalanceFrom: 1000
+                    newBalanceFrom: 1500
+                    operationTime: '2025-11-17T10:25:00'
         '400':
           description: Некорректный запрос!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400 Bad Request:
+                  description: 400 Bad Request
+                  value:
+                    title: Validation Error
+                    status: 400
+                    details: Request validation failed
+                    instance: >-
+                      /api/v1/wallets/123e4567-e89b-12d3-a456-426614174000/deposit
+                    localDateTime: '2025-11-17T10:30:00'
+                    fieldError:
+                      - field: amount
+                        message: Amount must be greater than zero
         '500':
           description: Неизвестная ошибка!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletOperationResponse'
+              examples:
+                500 Internal Server Error:
+                  description: 500 Internal Server Error
+                  value:
+                    title: Internal Server Error
+                    status: 500
+                    details: Unexpected error occurred
+                    instance: /api/v1/wallets/123/deposit
+                    localDateTime: '2025-11-16T21:10:00'
+  /api/v1/wallets:
+    get:
+      tags:
+        - Wallet Controller
+      summary: Получить список всех кошельков
+      operationId: findAll
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: Баланс получен успешно!
+          content:
+            application/json:
+              examples:
+                200 OK:
+                  description: 200 OK
+                  value:
+                    - walletID: 11111111-1111-1111-1111-111111111111
+                      balance: 4431
+                      requestedAt: '2025-11-17 11:04:02'
+                    - walletID: 22222222-2222-2222-2222-222222222222
+                      balance: 1268
+                      requestedAt: '2025-11-17 11:04:02'
+                    - walletID: 33333333-3333-3333-3333-333333333333
+                      balance: 184
+                      requestedAt: '2025-11-17 11:04:02'
   /api/v1/wallets/{uuid}:
     get:
       tags:
@@ -103,20 +190,42 @@ paths:
           description: Баланс получен успешно!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletDto'
+              examples:
+                200 OK:
+                  description: 200 OK
+                  value: |
+                    {
+                      "walletID": "1234-56789-1234-58789-5325321664"
+                      "balance": 1250.75,
+                      "requestedAt": "2025-11-17T10:15:30"
+                    }
         '400':
           description: Некорректный запрос!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400 Bad Request:
+                  description: 400 Bad Request
+                  value:
+                    title: Bad Request
+                    status: 400
+                    details: Invalid wallet UUID format
+                    instance: /api/v1/wallets/invalid-uuid
+                    localDateTime: '2025-11-17T10:20:00'
+                    fieldError: []
         '500':
           description: Неизвестная ошибка!
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/WalletDto'
+              examples:
+                500 Internal Server Error:
+                  description: 500 Internal Server Error
+                  value:
+                    title: Internal Server Error
+                    status: 500
+                    details: Unexpected error occurred
+                    instance: /api/v1/wallets/123/deposit
+                    localDateTime: '2025-11-16T21:10:00'
 components:
   schemas:
     TransferOperationRequest:
@@ -130,66 +239,6 @@ components:
           format: uuid
         amount:
           type: number
-    WalletOperationResponse:
-      type: object
-      properties:
-        OperationType:
-          type: string
-          description: Тип операции (Пополнение/Перевод)
-          enum:
-            - DEPOSIT
-            - WITHDRAW
-        OldBalance:
-          type: number
-          description: Баланс до перевода
-        NewBalance:
-          type: number
-          description: Баланс после перевода
-        OperationTime:
-          type: string
-          description: Время выполнения операции
-          format: date-time
-      description: Получение информации кошелька после операции
-    ErrorResponse:
-      type: object
-      properties:
-        title:
-          type: string
-          description: Краткое название ошибки
-          example: Invalid UUID
-        status:
-          type: integer
-          description: HTTP статус
-          format: int32
-          example: 400
-        details:
-          type: string
-          description: Подробности ошибки
-          example: 'The provided UUID is invalid: 123'
-        instance:
-          type: string
-          description: URI запроса
-          example: /api/v1/wallets/123
-        localDateTime:
-          type: string
-          description: Время ошибки
-          format: date-time
-        fieldError:
-          type: array
-          description: Поля валидации
-          example: '{field : amount, message : must be greater than zero}'
-          items:
-            $ref: '#/components/schemas/FieldError'
-      description: Стандартная структура ошибки
-    FieldError:
-      type: object
-      properties:
-        field:
-          type: string
-        message:
-          type: string
-      description: Ошибка конкретного поля
-      example: '{field : amount, message : must be greater than zero}'
     DepositOperationRequest:
       required:
         - amount
@@ -197,14 +246,3 @@ components:
       properties:
         amount:
           type: number
-    WalletDto:
-      type: object
-      properties:
-        Balance:
-          type: number
-          description: Новый баланс
-        RequestedAt:
-          type: string
-          description: Дата запроса
-          format: date-time
-      description: Стандартное отображение информации кошелька

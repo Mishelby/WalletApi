@@ -139,3 +139,5 @@ Adminer: http://localhost:8082
 
 Swagger UI: http://localhost:8080/swagger-ui.html
 (если включён)
+
+openAPI: http://localhost:8080/v3/api-docs
