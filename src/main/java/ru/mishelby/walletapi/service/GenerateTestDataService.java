@@ -2,9 +2,6 @@ package ru.mishelby.walletapi.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -17,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import static ru.mishelby.walletapi.utils.TestDataConstantValue.*;
 
@@ -39,13 +35,10 @@ import static ru.mishelby.walletapi.utils.TestDataConstantValue.*;
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "preload", name = "test-data", havingValue = "true")
-public class GenerateTestDataService implements CommandLineRunner, PreInsertEventListener {
+public class GenerateTestDataService implements CommandLineRunner{
     private static final Random RANDOM = new  Random();
 
     private final WalletRepository walletRepository;
-
-    @Value("${preload.walletID}")
-    private UUID walletID;
 
     /**
      * Метод запускается после старта приложения и вызывает генерацию тестовых кошельков.
@@ -82,15 +75,4 @@ public class GenerateTestDataService implements CommandLineRunner, PreInsertEven
         }
     }
 
-    @Override
-    public boolean onPreInsert(PreInsertEvent event) {
-        setWalletID(event.getEntity());
-        return false;
-    }
-
-    private void setWalletID(Object entity){
-        if(entity instanceof WalletEntity walletEntity){
-            walletEntity.setId(walletID);
-        }
-    }
 }
