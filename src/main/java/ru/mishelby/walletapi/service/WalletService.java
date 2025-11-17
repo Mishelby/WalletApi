@@ -15,6 +15,7 @@ import ru.mishelby.walletapi.utils.RepositoryHelper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -42,6 +43,18 @@ public class WalletService {
 
     private final RepositoryHelper repositoryHelper;
 
+    @Transactional(readOnly = true)
+    public List<WalletDto> findAll(int page, int size) {
+        var walletEntity = repositoryHelper.findAllWallets(page, size);
+
+        return walletEntity.stream()
+                .map(wallet ->
+                        new WalletDto(wallet.getId(),
+                                wallet.getBalance(),
+                                LocalDateTime.now()))
+                .toList();
+    }
+
     /**
      * Получает текущий баланс кошелька.
      *
@@ -51,7 +64,7 @@ public class WalletService {
     @Transactional(readOnly = true)
     public WalletDto getBalance(UUID uuid) {
         var walletEntity = repositoryHelper.findWalletByID(uuid);
-        var walletDto = new WalletDto(walletEntity.getBalance(), LocalDateTime.now());
+        var walletDto = new WalletDto(walletEntity.getId(), walletEntity.getBalance(), LocalDateTime.now());
 
         log.info("[INFO] Wallet dto: {}", walletDto);
         return walletDto;
@@ -60,7 +73,7 @@ public class WalletService {
     /**
      * Пополняет баланс кошелька.
      *
-     * @param walletID UUID кошелька
+     * @param walletID                UUID кошелька
      * @param depositOperationRequest объект запроса с суммой для депозита
      * @return {@link WalletOperationResponse} с информацией об операции
      * @throws WalletOperationException если сумма отрицательная
@@ -81,7 +94,7 @@ public class WalletService {
     /**
      * Снимает средства с кошелька и переводит их на другой кошелёк.
      *
-     * @param walletID UUID кошелька-отправителя
+     * @param walletID                 UUID кошелька-отправителя
      * @param transferOperationRequest объект запроса с суммой перевода и ID кошелька-получателя
      * @return {@link WalletOperationResponse} с информацией об операции
      * @throws WalletOperationException если сумма отрицательная или недостаточно средств на кошельке
@@ -109,9 +122,9 @@ public class WalletService {
     /**
      * Проверяет, что на кошельке достаточно средств для перевода.
      *
-     * @param walletID UUID кошелька
+     * @param walletID         UUID кошелька
      * @param walletEntityFrom сущность кошелька
-     * @param transferAmount сумма перевода
+     * @param transferAmount   сумма перевода
      * @throws WalletOperationException если баланс меньше суммы перевода
      */
     private static void checkWalletFromBalance(UUID walletID,
@@ -130,8 +143,8 @@ public class WalletService {
      * Проверяет корректность суммы и логирует запрос.
      *
      * @param operation тип операции
-     * @param amount сумма операции
-     * @param supplier поставщик результата операции
+     * @param amount    сумма операции
+     * @param supplier  поставщик результата операции
      * @return {@link WalletOperationResponse} результат операции
      * @throws WalletOperationException если сумма отрицательная
      */
@@ -171,8 +184,8 @@ public class WalletService {
     /**
      * Формирует объект {@link WalletOperationResponse} после операции.
      *
-     * @param oldBalance баланс до операции
-     * @param newBalance баланс после операции
+     * @param oldBalance    баланс до операции
+     * @param newBalance    баланс после операции
      * @param operationType тип операции
      * @return объект {@link WalletOperationResponse}
      */

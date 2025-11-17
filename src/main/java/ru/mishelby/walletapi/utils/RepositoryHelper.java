@@ -3,10 +3,16 @@ package ru.mishelby.walletapi.utils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.mishelby.walletapi.model.WalletEntity;
 import ru.mishelby.walletapi.repository.WalletRepository;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -60,6 +66,15 @@ public class RepositoryHelper {
                     return new EntityNotFoundException("Wallet Not Found For UUID %s".formatted(walletID));
                 }
         );
+    }
+
+    public List<WalletEntity> findAllWallets(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<WalletEntity> allWallets = walletRepository.findAll(pageable);
+        if (!allWallets.hasContent()) {
+            return Collections.emptyList();
+        }
+        return allWallets.getContent();
     }
 
     private static String defaultMessage(Supplier<String> messageSupplier) {

@@ -32,8 +32,16 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+springdoc:
+  packages-to-scan: ru.mishelby.walletapi
+  paths-to-match: /api/**
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
 swagger:
   enabled: true
 
 preload:
+  walletID: 00e22327-7cd6-4fc3-a9dc-7e0ada80f9f0
   test-data: true

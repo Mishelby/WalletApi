@@ -2,7 +2,7 @@ package ru.mishelby.walletapi.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,14 +12,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.mishelby.walletapi.exception.ErrorResponse;
 import ru.mishelby.walletapi.model.TransferOperationRequest;
 import ru.mishelby.walletapi.model.WalletDto;
 import ru.mishelby.walletapi.model.DepositOperationRequest;
 import ru.mishelby.walletapi.model.WalletOperationResponse;
 import ru.mishelby.walletapi.service.WalletService;
 
+import java.util.List;
 import java.util.UUID;
+
+import static ru.mishelby.walletapi.utils.ApiErrorExample.*;
 
 /**
  * REST-контроллер для управления операциями над кошельками.
@@ -43,6 +45,19 @@ public class WalletController {
 
     private final WalletService walletService;
 
+    @Operation(summary = "Получить список всех кошельков")
+    @GetMapping(produces =  MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Баланс получен успешно!",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "200 OK", value = WALLET_LIST_200)))
+    })
+    public ResponseEntity<List<WalletDto>> findAll(@RequestParam(required = false, defaultValue = "0") int page,
+                                                   @RequestParam(required = false, defaultValue = "10") int size) {
+        log.info("[INFO] GET request for getting all wallets");
+        return ResponseEntity.ok(walletService.findAll(page, size));
+    }
+
     /**
      * Получает текущий баланс кошелька по его UUID.
      *
@@ -53,10 +68,14 @@ public class WalletController {
     @GetMapping(path = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Баланс получен успешно!",
-                    content = @Content(schema = @Schema(implementation = WalletDto.class))),
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "200 OK", value = WALLET_BALANCE_200))),
             @ApiResponse(responseCode = "400", description = "Некорректный запрос!",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!")
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "400 Bad Request", value = WALLET_BALANCE_400))),
+            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "500 Internal Server Error", value = INTERNAL_ERROR_EXAMPLE)))
     })
     public ResponseEntity<WalletDto> getWalletBalance(@PathVariable("uuid") UUID uuid) {
         log.info("[INFO] GET request for getting wallet balance for [{}]", uuid);
@@ -74,14 +93,19 @@ public class WalletController {
     @PostMapping(path = "/{uuid}/deposit", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Пополнение прошло успешно!",
-                    content = @Content(schema = @Schema(implementation = WalletOperationResponse.class))),
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "200 OK", value = WALLET_OPERATION_200))),
             @ApiResponse(responseCode = "400", description = "Некорректный запрос!",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!")
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "400 Bad Request", value = WALLET_OPERATION_400))),
+            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "500 Internal Server Error", value = INTERNAL_ERROR_EXAMPLE)))
     })
     public ResponseEntity<WalletOperationResponse> depositOperation(
             @PathVariable("uuid") UUID uuid,
-            @RequestBody @Valid DepositOperationRequest request) {
+            @RequestBody @Valid DepositOperationRequest request
+    ) {
         log.info("[INFO] POST deposit request for wallet [{}]", uuid);
         return ResponseEntity.ok(walletService.deposit(uuid, request));
     }
@@ -97,14 +121,19 @@ public class WalletController {
     @PostMapping(path = "/{uuid}/withdraw", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Перевод выполнен успешно!",
-                    content = @Content(schema = @Schema(implementation = WalletOperationResponse.class))),
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "200 OK", value = WALLET_OPERATION_200))),
             @ApiResponse(responseCode = "400", description = "Некорректный запрос!",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!")
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "400 Bad Request", value = WALLET_OPERATION_400))),
+            @ApiResponse(responseCode = "500", description = "Неизвестная ошибка!",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(name = "500 Internal Server Error", value = INTERNAL_ERROR_EXAMPLE)))
     })
     public ResponseEntity<WalletOperationResponse> withdrawOperation(
             @PathVariable("uuid") UUID uuid,
-            @RequestBody @Valid TransferOperationRequest request) {
+            @RequestBody @Valid TransferOperationRequest request
+    ) {
         log.info("[INFO] POST withdraw request for wallet [{}]", uuid);
         return ResponseEntity.ok(walletService.withdraw(uuid, request));
     }

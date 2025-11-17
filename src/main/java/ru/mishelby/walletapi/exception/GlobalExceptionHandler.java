@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -44,9 +45,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException ex,
+            BindException ex,
             HttpServletRequest request) {
 
         List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
@@ -56,7 +57,7 @@ public class GlobalExceptionHandler {
                 .toList();
 
         String details = fieldErrors.stream()
-                .map(ErrorResponse.FieldError::getMessage)
+                .map(ErrorResponse.FieldError::message)
                 .collect(Collectors.joining("; "));
 
         var validationException = getErrorResponse(

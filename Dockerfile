@@ -8,7 +8,7 @@ COPY src ./src
 
 RUN gradle bootJar --no-daemon -x test
 
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM eclipse-temurin:17-jdk-jammy AS runtime
 WORKDIR /app
 
 COPY --from=build /app/build/libs/*.jar app.jar

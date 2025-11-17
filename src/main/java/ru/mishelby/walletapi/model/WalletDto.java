@@ -1,16 +1,17 @@
 package ru.mishelby.walletapi.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Schema(name = "WalletDto", description = "Стандартное отображение информации кошелька")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record WalletDto(
-        @Schema(name = "Balance", description = "Новый баланс")
+        UUID walletID,
         BigDecimal balance,
-
-        @Schema(name = "RequestedAt", description = "Дата запроса")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime requestedAt
 ) {
 }
